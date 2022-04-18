@@ -41,11 +41,17 @@ public class Util {
 		// a formula to check whether an id falls within the set {lower, upper} using the address size as our bound (modulos operation)
 		// it modifies 'upper' and 'id' when lower > upper e.g. set (6, 2) in mod 10 = {6, 7, 8, 9, 0, 1, 2}
 		
-		// implement: read the descriptions above
-		boolean cond = false;
-
+		// implement: read the descriptions above	
+		BigInteger adressSize = Hash.addressSize();
 		
-		return cond;
+		if(lower.compareTo(upper) > 0) {
+				return 
+						(lower.compareTo(id) <= 0 && id.compareTo(adressSize) <= 0) || 
+						(id.compareTo(BigInteger.ZERO) >= 0 && upper.compareTo(id) >= 0);
+		}
+		else {
+			return lower.compareTo(id) <= 0 && upper.compareTo(id) >= 0;
+		}
 	}
 	
 	public static List<String> toString(List<NodeInterface> list) throws RemoteException {

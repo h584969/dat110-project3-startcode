@@ -19,6 +19,7 @@ import java.util.Random;
 import java.util.Set;
 
 import no.hvl.dat110.middleware.Message;
+import no.hvl.dat110.middleware.Node;
 import no.hvl.dat110.rpc.interfaces.NodeInterface;
 import no.hvl.dat110.util.Hash;
 
@@ -63,7 +64,11 @@ public class FileManager {
 		// hash the replica
 		
 		// store the hash in the replicafiles array.
-
+		
+		for (int i = 0; i < numReplicas; i++) {
+			String name = filename + i;
+			replicafiles[i] = Hash.hashOf(name);
+		}
 	}
 	
     /**
@@ -90,6 +95,19 @@ public class FileManager {
     	
     	// increment counter
     	
+    	createReplicaFiles();
+    	
+    	int index = new Random().nextInt(numReplicas);
+    	
+    	for (int i = 0; i < numReplicas; i++) {
+    		
+    		NodeInterface node = chordnode.findSuccessor(replicafiles[i]);
+    		
+    		node.addKey(replicafiles[i]);
+			node.saveFileContent(filename, replicafiles[i], bytesOfFile, index == i);
+			
+			counter++;
+    	}
     		
 		return counter;
     }
@@ -116,6 +134,16 @@ public class FileManager {
 		
 		// save the metadata in the set succinfo.
 		
+		
+		createReplicaFiles();
+		
+		for (int i = 0; i < numReplicas; i++) {
+			NodeInterface node = chordnode.findSuccessor(replicafiles[i]);
+			Message m = node.getFilesMetadata(replicafiles[i]);
+			succinfo.add(m);
+		
+		}
+		
 		this.activeNodesforFile = succinfo;
 		
 		return succinfo;
@@ -137,7 +165,21 @@ public class FileManager {
 		
 		// return the primary
 		
-		return null; 
+		try {
+			Set<Message> messages = requestActiveNodesForFile(filename);
+			
+			for (Message m : messages) {
+				if (m.isPrimaryServer()) {
+					return Util.getProcessStub(m.getNodeIP(), m.getPort());
+				}
+			}
+			
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
     /**

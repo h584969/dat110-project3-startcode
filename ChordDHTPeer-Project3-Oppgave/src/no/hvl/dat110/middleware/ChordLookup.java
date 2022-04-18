@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import no.hvl.dat110.rpc.interfaces.NodeInterface;
 import no.hvl.dat110.util.Hash;
@@ -40,8 +41,22 @@ public class ChordLookup {
 		// if logic returns false; call findHighestPredecessor(key)
 		
 		// do return highest_pred.findSuccessor(key) - This is a recursive call until logic returns true
-				
-		return null;					
+		
+		NodeInterface successor = node.getSuccessor();
+		
+		NodeInterface stub = Util.getProcessStub(successor.getNodeName(), successor.getPort());
+		
+		if (
+				Util.computeLogic(
+						key.mod(Hash.addressSize()), 
+						node.getNodeID().add(BigInteger.ONE).mod(Hash.addressSize()), 
+						stub.getNodeID().mod(Hash.addressSize()))) {
+			return stub;
+		}
+		else {
+			return findHighestPredecessor(key).findSuccessor(key);
+		}
+							
 	}
 	
 	/**
@@ -61,6 +76,20 @@ public class ChordLookup {
 		// check that finger is a member of the set {nodeID+1,...,ID-1} i.e. (nodeID+1 <= finger <= key-1) using the ComputeLogic
 		
 		// if logic returns true, then return the finger (means finger is the closest to key)
+		
+		List<NodeInterface> nodes = node.getFingerTable();
+		
+		for (int i = nodes.size()-1; i >= 0; i--) {
+			
+			NodeInterface stub = Util.getProcessStub(nodes.get(i).getNodeName(), nodes.get(i).getPort());
+			if (
+					Util.computeLogic(
+							stub.getNodeID().mod(Hash.addressSize()),
+							node.getNodeID().add(BigInteger.ONE).mod(Hash.addressSize()),
+							key.subtract(BigInteger.ONE).mod(Hash.addressSize()))) {
+				return (NodeInterface) stub;
+			}
+		}
 		
 		return (NodeInterface) node;			
 	}

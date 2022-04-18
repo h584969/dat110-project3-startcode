@@ -183,7 +183,11 @@ public class Node extends UnicastRemoteObject implements NodeInterface {
 	@Override
 	public boolean requestMutexWriteOperation(Message message, byte[] updates, Set<Message> activepeers)
 			throws RemoteException {
-
+		
+		if (message == null) {
+			throw new RuntimeException("Bacon");
+		}
+		
 		this.message = message;
 		this.activenodesforfile = activepeers;
 		return mutex.doMutexRequest(this.message, updates);
