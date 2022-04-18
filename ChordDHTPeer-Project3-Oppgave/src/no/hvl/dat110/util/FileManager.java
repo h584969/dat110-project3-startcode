@@ -97,7 +97,7 @@ public class FileManager {
     	
     	createReplicaFiles();
     	
-    	int index = new Random().nextInt(numReplicas);
+    	int index = new Random().nextInt(numReplicas-1);
     	
     	for (int i = 0; i < numReplicas; i++) {
     		
